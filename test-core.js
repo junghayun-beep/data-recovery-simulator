@@ -1,0 +1,23 @@
+const fs=require("fs"),vm=require("vm"),assert=require("assert");
+const sandbox={window:{},document:{readyState:"loading",addEventListener:()=>{}},setTimeout,console};
+vm.runInNewContext(fs.readFileSync(__dirname+"/script.js","utf8"),sandbox);
+const C=sandbox.window.SimCore;
+assert(C,"SimCore exports should exist");
+assert.deepStrictEqual(Array.from(C.hammingEncode([1,0,1,1])),[0,1,1,0,0,1,1]);
+for(let bit=0;bit<7;bit++){const code=C.hammingEncode([1,0,1,1]);code[bit]^=1;const decoded=C.hammingDecode(code);assert.deepStrictEqual(Array.from(decoded.data),[1,0,1,1],`single-bit correction at ${bit+1}`);}
+const source=[1,0,1,1,0,0,1,0];
+const parity=C.parityMethod(source,0,()=>0.9);assert.deepStrictEqual(Array.from(parity.received),[...source,source.reduce((a,b)=>a^b,0)]);
+const repeat=C.repeatMethod(source,0,()=>0.9);assert.deepStrictEqual(Array.from(repeat.recovered),source);
+assert.strictEqual(repeat.accuracy,100);
+assert.strictEqual(parity.accuracy,100);assert.deepStrictEqual(Array.from(parity.recovered),source);
+const h=C.hammingMethod(source,0,()=>0.9);assert.strictEqual(h.accuracy,100);assert.deepStrictEqual(Array.from(h.recovered),source);
+const rng1=C.mulberry32(42),rng2=C.mulberry32(42);assert.deepStrictEqual(Array.from({length:20},()=>rng1()),Array.from({length:20},()=>rng2()));
+assert.deepStrictEqual(Array.from(C.getConditions(0.1,1.0,0.3)),[0.1,0.4,0.7,1]);
+console.log("PASS: core algorithm smoke tests");
+const noisyRepeat=C.repeatMethod(source,0.1,()=>0.99);
+assert.strictEqual(noisyRepeat.txBits,source.length*3);
+const oneErrorParity=C.parityMethod(source,0,()=>0.99);
+assert.strictEqual(oneErrorParity.damagedBlocks,0);
+const hammingTx=C.hammingEncode([0,0,0,0]);
+assert.deepStrictEqual(Array.from(hammingTx),[0,0,0,0,0,0,0]);
+console.log("PASS: repeat/parity/hamming baseline and encoding checks");
