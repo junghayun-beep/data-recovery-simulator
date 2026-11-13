@@ -1,39 +1,103 @@
 <!doctype html>
 <html lang="ko">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>오류 정정 유무 비교 모의실험</title>
-<style>
-:root{color-scheme:light;--ink:#172033;--muted:#64748b;--line:#dbe3ef;--blue:#2563eb;--teal:#0f9d8a;--bg:#f4f7fb}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Noto Sans KR",sans-serif}.wrap{max-width:1050px;margin:auto;padding:28px 18px 56px}.hero{background:linear-gradient(130deg,#14294b,#235b8c);color:white;padding:28px;border-radius:20px;margin-bottom:18px}.hero h1{margin:0 0 8px;font-size:clamp(24px,4vw,34px)}.hero p{margin:0;color:#dbeafe;line-height:1.6}.panel{background:white;border:1px solid var(--line);border-radius:16px;padding:20px;margin:14px 0;box-shadow:0 5px 20px #1e3a5f0a}.panel h2{font-size:18px;margin:0 0 16px}.controls{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:18px}.field label{display:flex;justify-content:space-between;font-weight:650;margin-bottom:9px}.field output{color:var(--blue);font-variant-numeric:tabular-nums}.field input{width:100%;accent-color:var(--blue)}.hint{font-size:12px;color:var(--muted);line-height:1.5;margin-top:6px}.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}button{border:0;border-radius:10px;padding:12px 18px;font-weight:700;cursor:pointer;background:var(--blue);color:white}button.secondary{background:#e9eff8;color:#1e3a5f}button:disabled{opacity:.55;cursor:wait}.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}.metric{border:1px solid var(--line);border-radius:13px;padding:16px}.metric .name{font-weight:700;color:var(--muted);font-size:13px}.metric .value{font-size:30px;font-weight:800;margin:5px 0;font-variant-numeric:tabular-nums}.metric .sub{font-size:12px;color:var(--muted)}.blue{color:var(--blue)}.teal{color:var(--teal)}canvas{width:100%;height:270px;display:block}.tablewrap{overflow-x:auto}table{border-collapse:collapse;width:100%;font-size:14px}th,td{padding:11px 12px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap}th:first-child,td:first-child{text-align:left}th{background:#f7f9fc;color:#475569}.note{background:#fff8e7;border:1px solid #f4d58b;border-radius:12px;padding:14px;color:#694d13;font-size:13px;line-height:1.6}.status{font-size:13px;color:var(--muted);margin-top:10px;min-height:20px}.foot{color:var(--muted);font-size:12px;line-height:1.6}.pill{display:inline-block;padding:4px 8px;border-radius:99px;background:#eaf2ff;color:#1d4ed8;font-size:12px;font-weight:700}
-</style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#101b33">
+  <meta name="description" content="반복 부호, 짝수 패리티, 해밍 코드의 데이터 복원 성능을 비교하는 교육용 시뮬레이터">
+  <meta name="mobile-web-app-capable" content="yes">
+  <title>디지털 데이터 복원 정확도 비교 실험실</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+  <script defer src="script.js"></script>
 </head>
-<body><main class="wrap">
-<header class="hero"><span class="pill">정보 복원 모의실험</span><h1>오류 정정 유무에 따른 데이터 복원 비교</h1><p>같은 원본 데이터와 오류 확률을 사용해, 오류 정정을 하지 않은 경우와 3회 반복 부호로 오류를 정정한 경우의 결과를 비교합니다.</p></header>
-<section class="panel"><h2>① 실험 조건 설정</h2><div class="controls">
-<div class="field"><label for="bits">원본 데이터 길이 <output id="bitsOut">1,200비트</output></label><input id="bits" type="range" min="100" max="10000" step="100" value="1200"><div class="hint">원본 데이터의 비트 수입니다.</div></div>
-<div class="field"><label for="rate">비트 오류 확률 <output id="rateOut">10%</output></label><input id="rate" type="range" min="0" max="30" step="0.5" value="10"><div class="hint">각 비트가 독립적으로 뒤집힐 확률입니다.</div></div>
-<div class="field"><label for="trials">반복 횟수 <output id="trialsOut">1,000회</output></label><input id="trials" type="range" min="10" max="2000" step="10" value="1000"><div class="hint">반복 횟수가 많을수록 우연에 의한 흔들림이 줄어듭니다.</div></div>
-</div><div class="actions"><button id="run">② 실험 실행</button><button class="secondary" id="sweep">오류 확률별 실험 (0~30%)</button><button class="secondary" id="reset">초기화</button></div><div class="status" id="status" aria-live="polite">조건을 설정한 뒤 실험을 실행하세요.</div></section>
-<section class="panel"><h2>③ 실험 결과</h2><div class="cards">
-<div class="metric"><div class="name">오류 정정 없음 · 복원 정확도</div><div class="value blue" id="rawAcc">-</div><div class="sub" id="rawBer">잔여 오류율: -</div></div>
-<div class="metric"><div class="name">3회 반복 부호 · 복원 정확도</div><div class="value teal" id="corAcc">-</div><div class="sub" id="corBer">잔여 오류율: -</div></div>
-<div class="metric"><div class="name">추가 데이터량</div><div class="value" id="overhead">200%</div><div class="sub">원본 데이터량 대비 3회 반복 부호의 추가 전송량</div></div>
-</div><div style="margin-top:18px"><canvas id="chart" width="950" height="270" aria-label="오류 정정 유무에 따른 복원 정확도 그래프"></canvas></div></section>
-<section class="panel"><h2>④ 오류 확률별 결과표</h2><div class="tablewrap"><table><thead><tr><th>오류 확률</th><th>정정 없음 정확도</th><th>3회 반복 정확도</th><th>정정 없음 잔여 오류율</th><th>3회 반복 잔여 오류율</th></tr></thead><tbody id="rows"><tr><td colspan="5" style="text-align:center;color:#64748b">아직 실험 결과가 없습니다.</td></tr></tbody></table></div><div class="actions"><button class="secondary" id="csv" disabled>결과 CSV 다운로드</button></div></section>
-<section class="panel"><h2>⑤ 결과 해석에 참고할 점</h2><div class="note"><b>실험에서 비교하는 두 조건</b><br>· 오류 정정 없음: 원본 비트를 한 번 전송하고, 수신된 비트를 그대로 사용합니다.<br>· 오류 정정 있음: 각 비트를 3번 반복해 전송하고, 수신된 세 비트 중 다수결로 원래 비트를 추정합니다.<br><br><b>주의:</b> 3회 반복 부호는 원본보다 전송 비트가 3배이므로 추가 데이터량은 200%입니다. 이 모의실험은 비트별 독립 오류를 가정하며, 실제 통신에서 발생하는 연속적인 오류나 신호 간섭을 모두 반영하지는 않습니다.</div><p class="foot">복원 정확도 = 복원된 비트 중 원본과 일치한 비트의 비율 × 100. 잔여 오류율은 복원 후 원본과 다른 비트의 비율입니다. 이 프로그램은 교육용 모의실험이며, 실행할 때마다 난수에 따라 결과가 조금씩 달라질 수 있습니다.</p></section>
+<body>
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">DIGITAL INFORMATION · RESEARCH LAB</div>
+    <h1>디지털 데이터 복원 시뮬레이터</h1>
+    <p>정보의 중복과 오류 정정 방식은 데이터 복원 정확도에 어떤 영향을 미칠까?</p>
+    <div class="hero-tags"><span>3회 반복 부호</span><span>짝수 패리티</span><span>해밍 (7,4)</span></div>
+  </div>
+</header>
+<main class="layout">
+  <section class="panel intro">
+    <div><span class="step">연구 목표</span><h2>오류가 발생한 데이터는 얼마나 정확하게 복원될까?</h2>
+      <p>동일한 길이의 원본 비트열에 서로 다른 부호화 방식을 적용하고, 전송 중 비트가 반전되는 상황을 모의실험합니다. 실험 조건을 바꾸고 반복 측정하여 복원 정확도와 추가 전송량의 관계를 비교하세요.</p>
+    </div>
+    <div class="model-note"><b>오류 모형</b><br>각 전송 비트가 설정한 확률에 따라 독립적으로 반전되는 베르누이 모형</div>
+  </section>
+
+  <section class="panel">
+    <div class="section-head"><div><span class="step">01 · 실험 설계</span><h2>실험 조건 설정</h2></div><span class="muted small">값을 바꾼 뒤 실험 실행</span></div>
+    <div class="form-grid">
+      <label>원본 데이터 길이 (비트)<input id="dataLength" type="number" min="40" max="10000" step="8" value="1200"><small>40~10,000, 8의 배수</small></label>
+      <label>오류 확률 시작 (%)<input id="pStart" type="number" min="0" max="50" step="0.1" value="0.1"></label>
+      <label>오류 확률 종료 (%)<input id="pEnd" type="number" min="0" max="50" step="0.1" value="20"></label>
+      <label>오류 확률 간격 (%p)<input id="pStep" type="number" min="0.1" max="10" step="0.1" value="0.5"></label>
+      <label>조건당 반복 횟수<input id="repetitions" type="number" min="10" max="10000" step="10" value="1000"></label>
+      <label>난수 시드<input id="seed" type="number" step="1" value="42"></label>
+    </div>
+    <div class="run-row">
+      <button id="runButton" class="primary">실험 실행</button>
+      <button id="resetButton" class="secondary">조건 초기화</button>
+      <button id="summaryCsv" class="outline" disabled>조건별 결과 CSV</button>
+      <button id="detailCsv" class="outline" disabled>반복별 결과 CSV</button>
+      <span id="runStatus" class="status" role="status">실험 대기 중</span>
+    </div>
+    <div class="progress-wrap" id="progressWrap" hidden><div class="progress-meta"><span id="progressText">0%</span><span id="progressCount"></span></div><div class="progress-track"><div id="progressBar"></div></div></div>
+    <p class="notice">계산은 현재 브라우저에서 수행됩니다. 오류 확률 조건 수 × 반복 횟수가 많을수록 시간이 오래 걸릴 수 있습니다. 같은 난수 시드와 조건을 사용하면 같은 결과를 재현할 수 있습니다.</p>
+  </section>
+
+  <section class="panel">
+    <div class="section-head"><div><span class="step">02 · 전송 과정</span><h2>비트 단위 실험 예시</h2></div><span class="muted small">첫 번째 오류 확률 조건의 첫 번째 시행</span></div>
+    <p class="muted small">아래 예시는 실제 실험에서 사용한 첫 번째 시행을 보여줍니다. 긴 비트열은 앞부분만 표시합니다.</p>
+    <div id="demoArea" class="demo-empty">실험을 실행하면 원본·전송·수신·복원 비트열이 표시됩니다.</div>
+  </section>
+
+  <section class="panel">
+    <div class="section-head"><div><span class="step">03 · 핵심 결과</span><h2>요약 지표</h2></div></div>
+    <div id="kpiGrid" class="kpi-grid">
+      <div class="kpi"><span>실험 상태</span><b>대기 중</b><small>실험 실행 후 표시</small></div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="section-head"><div><span class="step">04 · 시각적 분석</span><h2>실험 결과 그래프</h2></div><span class="muted small">그래프의 그래프의 점을 누르거나 마우스를 올리면 값 확인</span></div>
+    <div id="chartWarning" class="notice warning" hidden>그래프 라이브러리를 불러오지 못했습니다. 인터넷 연결을 확인한 뒤 페이지를 새로고침하세요. 결과표와 CSV 기능은 계속 사용할 수 있습니다.</div>
+    <div class="chart-grid">
+      <article class="chart-card"><h3>① 오류 확률에 따른 데이터 일치율</h3><p>수신 또는 복원된 데이터가 원본과 일치한 비율</p><div class="chart-holder"><canvas id="accuracyChart"></canvas></div></article>
+      <article class="chart-card"><h3>② 오류 확률에 따른 잔여 BER</h3><p>복원 후에도 원본과 다른 비트의 비율</p><div class="chart-holder"><canvas id="berChart"></canvas></div></article>
+      <article class="chart-card"><h3>③ 방식별 추가 전송량</h3><p>원본 데이터 길이 대비 추가된 전송 비트</p><div class="chart-holder"><canvas id="overheadChart"></canvas></div></article>
+      <article class="chart-card"><h3>④ 추가 전송량과 데이터 일치율</h3><p>각 오류 확률에서의 전송량-성능 관계</p><div class="chart-holder"><canvas id="tradeoffChart"></canvas></div></article>
+      <article class="chart-card"><h3>⑤ 패리티 오류 검출률</h3><p>손상된 블록 중 패리티 검사로 검출한 비율</p><div class="chart-holder"><canvas id="parityChart"></canvas></div></article>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="section-head"><div><span class="step">05 · 수집 데이터</span><h2>조건별 결과표</h2></div><span class="muted small">평균값 · 소수점 셋째 자리</span></div>
+    <div class="table-wrap"><table id="resultTable"><thead><tr>
+      <th>오류 확률</th><th>반복 부호 정확도</th><th>패리티 수신 일치율</th><th>해밍 정확도</th><th>반복 BER</th><th>해밍 BER</th><th>패리티 검출률</th><th>패리티 미검출률</th>
+    </tr></thead><tbody><tr><td colspan="8" class="empty-cell">실험 결과가 여기에 표시됩니다.</td></tr></tbody></table></div>
+  </section>
+
+  <section class="panel">
+    <div class="section-head"><div><span class="step">06 · 결과 해석</span><h2>자동 통계 분석</h2></div></div>
+    <div id="analysis" class="analysis-empty">실험을 실행하면 실제 측정값을 바탕으로 경향성을 분석합니다. 실험하지 않은 수치는 표시하지 않습니다.</div>
+    <div id="statsTableWrap" class="table-wrap" hidden><h3 class="subheading">반복 측정 통계 (평균 ± 표준편차, 95% 신뢰구간)</h3><table id="statsTable"><thead><tr><th>오류 확률</th><th>방식</th><th>정확도 평균</th><th>표준편차</th><th>95% 신뢰구간</th></tr></thead><tbody></tbody></table></div>
+  </section>
+
+  <section class="panel limitations">
+    <div class="section-head"><div><span class="step">07 · 연구 해석</span><h2>실험의 전제와 한계</h2></div></div>
+    <ul>
+      <li>본 실험은 각 전송 비트에 독립적으로 오류가 발생한다고 가정한 모의실험입니다.</li>
+      <li>실제 무선 통신의 간섭, 감쇠, 반사, 연속적인 버스트 오류를 완전히 재현하지 않습니다.</li>
+      <li>패리티는 오류 검출 방식이며, 오류가 발생한 데이터를 자동으로 수정하지 않습니다.</li>
+      <li>해밍 (7,4)는 단일 비트 오류 정정을 보장하지만 다중 비트 오류에서는 오정정이 발생할 수 있습니다.</li>
+      <li>복원 성능을 높이기 위한 중복 정보는 추가 전송량을 증가시키므로 복원 정확도와 전송 효율을 함께 고려해야 합니다.</li>
+    </ul>
+  </section>
+  <footer>디지털 데이터 복원 정확도 비교 실험실 · 모든 계산은 사용자의 브라우저에서 실행됩니다.</footer>
 </main>
-<script>
-const $=id=>document.getElementById(id);let latest=[];
-function updateLabels(){$('bitsOut').textContent=Number($('bits').value).toLocaleString()+'비트';$('rateOut').textContent=$('rate').value+'%';$('trialsOut').textContent=Number($('trials').value).toLocaleString()+'회'}['bits','rate','trials'].forEach(id=>$(id).addEventListener('input',updateLabels));updateLabels();
-function simulate(bits,rate,trials){let rawWrong=0,corWrong=0,total=bits*trials,p=rate/100;for(let t=0;t<trials;t++){for(let i=0;i<bits;i++){const original=Math.random()<.5?0:1;const received=original^(Math.random()<p?1:0);if(received!==original)rawWrong++;let votes=0;for(let k=0;k<3;k++)votes+=original^(Math.random()<p?1:0);const decoded=votes>=2?1:0;if(decoded!==original)corWrong++;}}return{rate,rawAcc:100*(1-rawWrong/total),corAcc:100*(1-corWrong/total),rawBer:100*rawWrong/total,corBer:100*corWrong/total,trials,bits}}
-function fmt(x){return x.toFixed(4)+'%'}
-function showResult(r){$('rawAcc').textContent=fmt(r.rawAcc);$('corAcc').textContent=fmt(r.corAcc);$('rawBer').textContent='잔여 오류율: '+fmt(r.rawBer);$('corBer').textContent='잔여 오류율: '+fmt(r.corBer);draw([r]);latest=[r];renderRows(latest);$('csv').disabled=false}
-function draw(data){const c=$('chart'),ctx=c.getContext('2d'),w=c.width,h=c.height;ctx.clearRect(0,0,w,h);const left=65,right=22,top=20,bottom=45,pw=w-left-right,ph=h-top-bottom;ctx.font='13px system-ui';ctx.fillStyle='#475569';ctx.strokeStyle='#e2e8f0';ctx.lineWidth=1;for(let v=0;v<=100;v+=20){let y=top+ph*(1-v/100);ctx.beginPath();ctx.moveTo(left,y);ctx.lineTo(w-right,y);ctx.stroke();ctx.fillText(v+'%',15,y+4)}ctx.fillText('복원 정확도',left,13);if(data.length===1){const r=data[0];ctx.fillStyle='#2563eb';ctx.fillRect(left+pw*.23,top+ph*(1-r.rawAcc/100),pw*.18,ph*r.rawAcc/100);ctx.fillStyle='#0f9d8a';ctx.fillRect(left+pw*.57,top+ph*(1-r.corAcc/100),pw*.18,ph*r.corAcc/100);ctx.fillStyle='#334155';ctx.textAlign='center';ctx.fillText('정정 없음',left+pw*.32,h-15);ctx.fillText('3회 반복 부호',left+pw*.66,h-15);ctx.textAlign='left'}else{const x=i=>left+pw*i/(data.length-1);for(const [key,color] of [['rawAcc','#2563eb'],['corAcc','#0f9d8a']]){ctx.strokeStyle=color;ctx.lineWidth=3;ctx.beginPath();data.forEach((r,i)=>{let y=top+ph*(1-r[key]/100);if(i===0)ctx.moveTo(x(i),y);else ctx.lineTo(x(i),y)});ctx.stroke()}ctx.fillStyle='#475569';ctx.textAlign='center';data.forEach((r,i)=>{if(i%2===0||i===data.length-1)ctx.fillText(r.rate+'%',x(i),h-15)});ctx.textAlign='left'}ctx.fillStyle='#2563eb';ctx.fillRect(w-230,18,12,4);ctx.fillStyle='#334155';ctx.fillText('정정 없음',w-212,24);ctx.fillStyle='#0f9d8a';ctx.fillRect(w-125,18,12,4);ctx.fillStyle='#334155';ctx.fillText('3회 반복',w-107,24)}
-function renderRows(data){$('rows').innerHTML=data.map(r=>`<tr><td>${r.rate.toFixed(1)}%</td><td>${fmt(r.rawAcc)}</td><td>${fmt(r.corAcc)}</td><td>${fmt(r.rawBer)}</td><td>${fmt(r.corBer)}</td></tr>`).join('')}
-$('run').addEventListener('click',()=>{const b=+$('bits').value,r=+$('rate').value,t=+$('trials').value;$('status').textContent='실험 계산 중...';$('run').disabled=true;setTimeout(()=>{const result=simulate(b,r,t);showResult(result);$('status').textContent=`완료: ${b.toLocaleString()}비트 × ${t.toLocaleString()}회, 오류 확률 ${r}%`; $('run').disabled=false},20)});
-$('sweep').addEventListener('click',()=>{const b=+$('bits').value,t=+$('trials').value;$('sweep').disabled=true;$('status').textContent='오류 확률별 실험 계산 중...';setTimeout(()=>{latest=[];for(let rate=0;rate<=30.0001;rate+=2){latest.push(simulate(b,rate,t))}draw(latest);renderRows(latest);const last=latest[Math.round((+$('rate').value)/2)];showCardsOnly(last);$('csv').disabled=false;$('status').textContent=`완료: 오류 확률 0~30%, 2%p 간격, 조건별 ${t.toLocaleString()}회 반복`;$('sweep').disabled=false},30)});
-function showCardsOnly(r){$('rawAcc').textContent=fmt(r.rawAcc);$('corAcc').textContent=fmt(r.corAcc);$('rawBer').textContent='잔여 오류율: '+fmt(r.rawBer);$('corBer').textContent='잔여 오류율: '+fmt(r.corBer)}
-$('reset').addEventListener('click',()=>{$('bits').value=1200;$('rate').value=10;$('trials').value=1000;updateLabels();latest=[];$('rawAcc').textContent=$('corAcc').textContent='-';$('rawBer').textContent=$('corBer').textContent='잔여 오류율: -';$('rows').innerHTML='<tr><td colspan="5" style="text-align:center;color:#64748b">아직 실험 결과가 없습니다.</td></tr>';$('csv').disabled=true;$('status').textContent='조건을 설정한 뒤 실험을 실행하세요.';draw([])});
-$('csv').addEventListener('click',()=>{if(!latest.length)return;const lines=[['오류확률(%)','정정없음_정확도(%)','3회반복_정확도(%)','정정없음_잔여오류율(%)','3회반복_잔여오류율(%)'],...latest.map(r=>[r.rate,r.rawAcc,r.corAcc,r.rawBer,r.corBer])];const csv='\uFEFF'+lines.map(row=>row.join(',')).join('\n');const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));a.download='오류정정_비교실험_결과.csv';a.click();URL.revokeObjectURL(a.href)});
-draw([]);
-</script></body></html>
+</body>
+</html>
